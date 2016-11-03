@@ -1,5 +1,5 @@
 %{
-#include "func.h" 
+#include "typeChecker.h" 
 #include <stdio.h>
 #include <math.h>  
 
@@ -11,13 +11,9 @@
     struct node *symp;
     char* name;
 }
-%token <symp> ID
-%token <val> CLASS
+%token <name> ID
+%token <symp> CLASS
 %token <symp> DATATYPE
-%type <symp> E
-%type <symp> expression
-%left '+' '-'
-%left '*' '/'
 %%
 
 P: CLS    {}
@@ -35,10 +31,11 @@ FUNC : DATATYPE ID       { symtab = add( symtab, $2, getCurBlockID() );symtab->t
      ;
 
 STATEMENTS : E ';' STATEMENTS     {}
-           | DECL  STATEMENTS     {}
-           | error STATEMENTS     {}
-           |
+           | DECL  STATEMENTS     {  }
+           | error STATEMENTS     {  }
+           |                      {  }
            ;
+
 
 DECL : DATATYPE IDLIST';' {} 
      ;
@@ -64,60 +61,14 @@ IDLIST : IDLIST ','ID     {
        ;
 
        
-E: ID '=' expression    { 
-                            Node* itr = find( symtab, $1 );
-                            if( itr == NULL )
-                            {
-                                yyerror( "Not in scope" );
-                            }
-                            else
-                            {
-                                if( itr->type == $3 )
-                                { 
-                                    $$ = $3; 
-                                }
-                                else
-                                { 
-                                    yyerror( "Not compatable types" );
-                                } 
-                            free($1);
-                    
-                            }
-                        }
- | ID           { 
-                    Node* itr = find( symtab, $1 );
-                    
-                    if( itr == NULL )
-                    {
-                       yyerror( "Not in scope" );
-                    }
-                    else
-                    {
-                        $$ = itr->type; 
-                        free($1);
-                    }
-                          
-                }
+E: ID '=' E                         {
+                                          
+                                    }
+ | ID                               {
+                                        
+                                    }
 
-expression : expression '+' expression { $$ = $1; }
-           | expression '-' expression { $$ = $1; }
-           | expression '*' expression { $$ = $1; }
-           | expression '/' expression { $$ = $1; }
-           | ID                        {
-                                            Node* itr = find( symtab, $1 );
-                    
-                                            if( itr == NULL )
-                                            {
-                                                yyerror( "Not in scope" );
-                                            }
-                                            else
-                                            {
-                                                $$ = itr->type; 
-                                                free($1);
-                                            }
-                     
-                                        }
-           ;
+
 
  ;
 
@@ -136,6 +87,7 @@ Node* add( Node* ll, char* s, int b_id )
     return newEntry;
 }
 
+//It finds the symbol to all the outer + current scope declaration
 Node* find( const Node* const ll, char* s )
 {
     Node* itr = ll;
@@ -199,6 +151,8 @@ void printLL( const Node* const ll )
     }
     printf( "<----End---->\n\n" );
 }
+
+
 
 //0th block is universal
 int getNextBlockID()

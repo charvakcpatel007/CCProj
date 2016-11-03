@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include"y.tab.h"
 
-#include "func.h"
+#include "typeChecker.h"
 
 %}
 %option noyywrap
@@ -23,7 +23,7 @@
                                                                 }
                                                                 else
                                                                 {
-                                                                    if( temp->type == NULL )// no type becoz it is a type lol
+                                                                    if( temp->type == NULL )
                                                                     {
                                                                         yylval.symp = temp;
                                                                         return DATATYPE;

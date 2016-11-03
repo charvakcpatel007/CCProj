@@ -5,11 +5,7 @@ class A
     float x,y,z;
     void fx()
     {
-        while( a = b )
-        {
-            a = c + a;
-            x = a * z;
-        }
+        
     }
 }
 
