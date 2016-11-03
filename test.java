@@ -5,7 +5,7 @@ class A
     float x,y,z;
     void fx()
     {
-        
+        a = ty;
     }
 }
 

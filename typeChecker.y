@@ -14,6 +14,7 @@
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
+%type <symp> E
 %%
 
 P: CLS    {}
@@ -62,9 +63,29 @@ IDLIST : IDLIST ','ID     {
 
        
 E: ID '=' E                         {
-                                          
+                                        Node* itr = find( symtab, $1 );
+                                        if( itr == NULL )yyerror( "Not in scope " );
+                                        else
+                                        {
+                                            if( itr->type == $3 )
+                                            {
+                                                $$ = $3;
+                                            }
+                                            else
+                                            {
+                                                yyerror( "Not compatable types" );
+                                                $$ = itr->type;
+                                            }    
+                                        }
+                                        
                                     }
  | ID                               {
+                                        Node* itr = find( symtab, $1 );
+                                        if( itr == NULL )yyerror( "Not in scope " );
+                                        else
+                                        {
+                                            $$ = itr->type;
+                                        }
                                         
                                     }
 
@@ -76,10 +97,10 @@ E: ID '=' E                         {
 //ID gets pointer to symtab so E gets its type
 
 
+//ID name  directly points to the s provided so it should not be on stack or freed later on.
 Node* add( Node* ll, char* s, int b_id )
 {
     Node* newEntry = ( Node* )malloc( sizeof( Node ) );
-    newEntry->name = (char*)malloc( strlen( s ) + 1 );
     newEntry->name = s;
     newEntry->type = NULL;
     newEntry->next = ll;
@@ -101,6 +122,7 @@ Node* find( const Node* const ll, char* s )
     return NULL;
 }
 
+//use it when declaring , it just searches in current scope
 Node* findDecl( const Node* const ll, char* s )
 {
     Node* itr = ll;
@@ -187,6 +209,7 @@ int getCurBlockID()
 }
 
 
+//Checks if provided block_id of ID provided is in the scope or not
 int isInScope( int symBlock )
 {
     
