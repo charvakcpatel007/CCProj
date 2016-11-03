@@ -20,15 +20,23 @@
 P: CLS    {}
  | CLS P  {;}
 
-CLS : CLASS ID { symtab = add( symtab, $2, getCurBlockID() ); } '{'CBLOCK'}'         { ; } 
+CLS : CLASS ID           { 
+                            curClass = symtab = add( symtab, $2, getCurBlockID() );
+                            curClassScope = getCurBlockID() + 1;
+                         } 
+    '{'CBLOCK'}'         { ; } 
 
 CBLOCK : CBLOCK DECL {;}
        | CBLOCK FUNC {;}
-       | CBLOCK CLS  {;}
        |             {;}
        ;
 
-FUNC : DATATYPE ID       { symtab = add( symtab, $2, getCurBlockID() );symtab->type = $1; } '('')''{'STATEMENTS '}' {  }
+FUNC : DATATYPE ID             { 
+                                   symtab = add( symtab, $2, getCurBlockID() );
+                                   symtab->type = $1; 
+                                   symtab->classPtr = curClass;
+                               } 
+       '('')''{'STATEMENTS '}' {  }
      ;
 
 STATEMENTS : E ';' STATEMENTS     {}
@@ -48,6 +56,14 @@ IDLIST : IDLIST ','ID     {
                             {
                                 symtab = add( symtab, $3, getCurBlockID() );
                                 symtab->type = $<symp>0;
+                                if( curClassScope == getCurBlockID() )
+                                {
+                                    symtab->classPtr = curClass;
+                                }
+                                else
+                                {
+                                    symtab->classPtr = NULL;
+                                }
                             }
                           }
        | ID               {  
@@ -57,6 +73,14 @@ IDLIST : IDLIST ','ID     {
                             {
                                 symtab = add( symtab, $1, getCurBlockID() );
                                 symtab->type = $<symp>0;
+                                if( curClassScope == getCurBlockID() )
+                                {
+                                    symtab->classPtr = curClass;
+                                }
+                                else
+                                {
+                                    symtab->classPtr = NULL;
+                                }
                             }     
                           }
        ;
@@ -79,7 +103,7 @@ E: ID '=' E                         {
                                         }
                                         
                                     }
- | ID                               {
+ | ID                              {
                                         Node* itr = find( symtab, $1 );
                                         if( itr == NULL )yyerror( "Not in scope " );
                                         else
@@ -88,6 +112,7 @@ E: ID '=' E                         {
                                         }
                                         
                                     }
+                                    
 
 
 
@@ -103,6 +128,7 @@ Node* add( Node* ll, char* s, int b_id )
     Node* newEntry = ( Node* )malloc( sizeof( Node ) );
     newEntry->name = s;
     newEntry->type = NULL;
+    newEntry->classPtr = NULL;
     newEntry->next = ll;
     newEntry->blockID = b_id;
     return newEntry;
@@ -141,11 +167,14 @@ void  main()
     symtab = NULL;
     line = 1;
     stack = NULL;
+    curClass = NULL;
+    curClassScope = 0;
     int i = 0;
     char a[][10] = { "int", "float", "double", "byte", "char", "String", "void" };
     for( i = 0; i < 7; i++ )
     {
         symtab = add( symtab, a[ i ], 0 );
+        
     }
     yyparse();
     printLL( symtab );
@@ -162,14 +191,12 @@ void printLL( const Node* const ll )
     printf( "<---Start--->\n" );
     for( itr = ll; itr != NULL; itr = itr->next )
     {
-        if( itr->type == NULL )
-        {
-            printf( "%s -- %d\n", itr->name, itr->blockID );
-        }
-        else
-        {
-            printf( "%s -- %d -- %s\n", itr->name, itr->blockID, itr->type->name );
-        }
+        printf( "%s -- %d -- %s -- %s\n", itr->name
+                                        , itr->blockID
+                                        , ( itr->type == NULL ) ? "Type" : itr->type->name
+                                        , ( itr->classPtr == NULL ) ? "Non-Member" : itr->classPtr->name
+            );
+        
     }
     printf( "<----End---->\n\n" );
 }

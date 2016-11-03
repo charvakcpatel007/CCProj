@@ -4,12 +4,14 @@ typedef struct node
 {
     char* name;
     struct node* type;//in typetab it remains zero
-    struct node* classptr;
+    struct node* classPtr;
     struct node* next;
     int blockID;
 } Node; 
 
 Node* symtab;
+Node* curClass;
+int curClassScope;
 int line;
 extern char* yytext; 
 
