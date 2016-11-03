@@ -13,6 +13,7 @@ Node* symtab;
 Node* curClass;
 int curClassScope;
 int line;
+int nextID;
 extern char* yytext; 
 
 Node* add( Node* ll, char* s, int b_id );
@@ -34,7 +35,7 @@ sNode* stack;
 void push();
 void pop();
 int getCurBlockID();
-int getNextBlockID();
+int genNextBlockID();
 
 /*
 P: CLS    {}

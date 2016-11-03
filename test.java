@@ -1,20 +1,21 @@
 
 class A
 {   
+    A x;
     int a,b,c;
-    float x,y,z;
     void fx()
     {
-       
+       int d;
     }
 }
 
 class B
 {
-    int b;
+    A b;
     void fx()
     {
-        int b;
-    }
+        A bin;
+        bin.x.c = b.c;
+    } 
 }
 
