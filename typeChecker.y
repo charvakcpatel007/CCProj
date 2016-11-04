@@ -40,8 +40,9 @@ FUNC : DATATYPE ID             {
                                    symtab = add( symtab, $2, getCurBlockID() );
                                    symtab->type = $1; 
                                    symtab->classPtr = curClass;
+                                   curFunction = symtab;
                                } 
-       '('ARGORNULL')'           {
+       '('ARGORNULL')'         {
                                 
                                } 
        '{'STATEMENTS '}'       {
@@ -70,11 +71,12 @@ ARG : DATATYPE ID                     {
                                              symtab->type = $1;
                                              //Well they are clearly not a member of a class.
                                              symtab->classPtr = NULL;
+                                             curFunction->args = addArg( curFunction->args, $1 );   
                                          }
                                       }
      ;
                                       
-STATEMENTS : E ';' STATEMENTS     {}
+STATEMENTS : E ';' STATEMENTS     {  }
            | DECL  STATEMENTS     {  }
            | error STATEMENTS     {  }
            |                      {  }
@@ -124,23 +126,20 @@ IDLIST : IDLIST ','ID     {
        ;
 /****************************************/
 /*Part which handles when id is refered*/      
-E: IDI '=' E                         {
+E: IDI '=' E                        {
                                         if( $1 == $3 )
                                         {
                                             $$ = $3;
                                         }
                                         else
                                         {
-                                            printf( "%s != %s", $1->name, $3->name );
+                                            printf( "%s != %s ", $1->name, $3->name );
                                             yyerror( "Not compatable types" );
                                             $$ = $3;
                                         }    
-                                        
-                                        
                                     }
  | IDI                              {
-                                       $$ =  $1;
-                                        
+                                       $$ =  $1;  
                                     }
  ;
                                     
@@ -190,9 +189,42 @@ Node* add( Node* ll, char* s, int b_id )
     newEntry->classPtr = NULL;
     newEntry->next = ll;
     newEntry->blockID = b_id;
+    newEntry->args = NULL;
     return newEntry;
 }
 
+void printLL( const Node* const ll )
+{
+    Node* itr = ll;
+    printf( "<---Start--->\n" );
+    for( itr = ll; itr != NULL; itr = itr->next )
+    {
+        printf( "%s -- %d -- %s -- %s -- ", itr->name
+                                        , itr->blockID
+                                        , ( itr->type == NULL ) ? "Type" : itr->type->name
+                                        , ( itr->classPtr == NULL ) ? "Non-Member" : itr->classPtr->name
+            );
+        printArgList( itr->args );
+        printf( "\n" );
+    }
+    printf( "<----End---->\n\n" );
+}
+
+void printArgList( const argListNode* const ll )
+{
+    const argListNode* itr = ll;
+    for( itr = ll; itr != NULL; itr = itr->next )
+    {
+        printf( "%s ", itr->ptr->name );
+    }
+}
+argListNode* addArg( argListNode* ll, struct node* ptr )
+{
+    argListNode* newEntry = (argListNode*)malloc( sizeof( argListNode ) );
+    newEntry->next = ll;
+    newEntry->ptr = ptr;
+    return newEntry;
+}
 
 //It finds the symbol to all the outer + current scope declaration
 Node* find( const Node* const ll, char* s )
@@ -228,6 +260,7 @@ void  main()
     line = 1;
     stack = NULL;
     curClass = NULL;
+    curFunction = NULL;
     nextID = 1;
     curClassScope = 0;
     int i = 0;
@@ -246,21 +279,7 @@ yyerror(const char *msg)
      printf("error : %s at line %d \n",msg, line );
 }
 
-void printLL( const Node* const ll )
-{
-    Node* itr = ll;
-    printf( "<---Start--->\n" );
-    for( itr = ll; itr != NULL; itr = itr->next )
-    {
-        printf( "%s -- %d -- %s -- %s\n", itr->name
-                                        , itr->blockID
-                                        , ( itr->type == NULL ) ? "Type" : itr->type->name
-                                        , ( itr->classPtr == NULL ) ? "Non-Member" : itr->classPtr->name
-            );
-        
-    }
-    printf( "<----End---->\n\n" );
-}
+
 
 
 
