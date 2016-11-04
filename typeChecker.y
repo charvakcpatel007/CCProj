@@ -10,12 +10,15 @@
     double dval;
     struct node *symp;
     char* name;
+    struct arglist* argp;
 }
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
 %type <symp> E
 %type <symp> IDI
+%type <argp> FCALLARGS
+%type <argp> CALLARGLIST
 %%
 
 P: CLS    {}
@@ -43,7 +46,10 @@ FUNC : DATATYPE ID             {
                                    curFunction = symtab;
                                } 
        '('ARGORNULL')'         {
-                                
+                                   if( curFunction->args == NULL )
+                                   {
+                                       curFunction->args = addArg( curFunction->args, voidTypePtr );
+                                   }
                                } 
        '{'STATEMENTS '}'       {
            
@@ -51,7 +57,7 @@ FUNC : DATATYPE ID             {
      ;
 
 ARGORNULL : ARGLIST             { }
-          |                     { }
+          |                     {  }
           ;
 ARGLIST : ARGLIST ',' ARG             {
                                         
@@ -143,7 +149,7 @@ E: IDI '=' E                        {
                                     }
  ;
                                     
-IDI : IDI '.' ID                    {
+IDI : IDI '.' ID FCALLARGS          {
                                         //Determine if it is accesable or not
                                         Node* itr;
                                         int found = 0;
@@ -158,23 +164,48 @@ IDI : IDI '.' ID                    {
                                         if( found == 1 )
                                         {
                                             $$ = itr->type;
+                                            //Get the linked list of called types
+                                            if( isSameArgs( $4, itr->args ) == 0 )
+                                            {
+                                                yyerror( "Arguments Doesnt match" );
+                                            }
+                                            
                                         }
                                         else
                                         {
                                             yyerror( "Not a member or in-compatatble types" );
-                                            $$ = itr->type;
+                                            $$ = $1;
                                         }
                                         
                                     }
-    | ID                            {
+    | ID FCALLARGS                   {
                                         Node* itr = find( symtab, $1 );
                                         if( itr == NULL )yyerror( "Not in scope " );
                                         else
                                         {
                                             $$ = itr->type;
+                                            if( isSameArgs( $2, itr->args ) == 0 )
+                                            {
+                                                yyerror( "Arguments Doesnt match" );
+                                            }
                                         }
                                     }
     ;
+FCALLARGS : '('CALLARGLIST')'       {
+                                        $$ = $2;
+                                    }
+          | '('')'                  {
+                                        $$ = addArg( NULL, voidTypePtr );
+                                    }
+          |                         {
+                                        $$ = NULL;
+                                    }
+CALLARGLIST : CALLARGLIST ',' IDI   {
+                                        $$ = addArg( $1, $3 );
+                                    }
+            | IDI                   {
+                                        $$ = addArg( NULL, $1 );
+                                    }
 /********************************************/
 %%
 //ID gets pointer to symtab so E gets its type
@@ -197,6 +228,7 @@ void printLL( const Node* const ll )
 {
     Node* itr = ll;
     printf( "<---Start--->\n" );
+    printf( "Name -- Block ID -- TYPE -- Member of Class -- ArgList Right-Left\n" );
     for( itr = ll; itr != NULL; itr = itr->next )
     {
         printf( "%s -- %d -- %s -- %s -- ", itr->name
@@ -224,6 +256,27 @@ argListNode* addArg( argListNode* ll, struct node* ptr )
     newEntry->next = ll;
     newEntry->ptr = ptr;
     return newEntry;
+}
+
+int isSameArgs( const argListNode* const l1, const argListNode* const l2 )
+{
+    const argListNode* itr1 = l1;
+    const argListNode* itr2 = l2;
+    for( ;1;itr1 = itr1->next, itr2 = itr2->next )
+    {
+        if( itr1 == NULL && itr2 == NULL )
+        {
+            return 1;
+        }
+        if( itr1 == NULL || itr2 == NULL )
+        {
+            return 0;
+        }
+        if( itr1->ptr != itr2->ptr )
+        {
+            return 0;
+        }
+    }
 }
 
 //It finds the symbol to all the outer + current scope declaration
@@ -261,6 +314,7 @@ void  main()
     stack = NULL;
     curClass = NULL;
     curFunction = NULL;
+    voidTypePtr = NULL;
     nextID = 1;
     curClassScope = 0;
     int i = 0;
@@ -270,6 +324,7 @@ void  main()
         symtab = add( symtab, a[ i ], 0 );
         
     }
+    voidTypePtr = symtab;
     yyparse();
     printLL( symtab );
 }
@@ -278,10 +333,6 @@ yyerror(const char *msg)
 {
      printf("error : %s at line %d \n",msg, line );
 }
-
-
-
-
 
 //0th block is universal
 int genNextBlockID()

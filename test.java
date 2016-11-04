@@ -3,7 +3,7 @@ class A
 {   
     A x;
     int a,b,c;
-    int fx( double f11 )
+    A fx( int f1, float f2, A f3 )
     { 
        int d;
     }
@@ -12,9 +12,10 @@ class A
 class B
 {
     A b;
-    void fx( int f1, float f2, A f3 )
+    int a;
+    float x;
+    void fx(  )
     {
-       
     } 
 }
 

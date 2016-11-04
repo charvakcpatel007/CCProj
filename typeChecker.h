@@ -24,6 +24,7 @@ typedef struct node
 Node* symtab;
 Node* curClass;
 Node* curFunction;
+Node* voidTypePtr;
 int curClassScope;
 int line;
 int nextID;
@@ -37,6 +38,7 @@ Node* findDecl( const Node* const ll, char* s, int blockID );
 
 void printArgList( const argListNode* const ll );
 argListNode* addArg( argListNode* ll, struct node* ptr );
+int isSameArgs( const argListNode* const l1, const argListNode* const l2 );
 int isInScope( int symBlock );
 
 
@@ -47,23 +49,4 @@ void pop();
 int getCurBlockID();
 int genNextBlockID();
 
-/*
-P: CLS    {}
- | CLS P  {;}
-
-CLS : CLASS ID'{'CBLOCK'}' { } 
-
-CBLOCK : DECL CBLOCK {;}
-       | FUNC CBLOCK {;}
-       | DECL        {;}
-       | FUNC        {;}
-
-DECL : DATATYPE IDLIST';' {} 
-
-IDLIST : ID','IDLIST     { symLast->typeId = curDataType; }
-       | ID              { symLast->typeId = curDataType; }
-
-FUNC : DATATYPE ID'('')''{ 'STATEMENTS '}' {  }
-
-*/
 #endif
