@@ -20,44 +20,80 @@
 
 P: CLS    {}
  | CLS P  {;}
-
+ ;
 CLS : CLASS ID           { 
                             curClass = symtab = add( symtab, $2, getCurBlockID() );
+                            /*
+                            For the declarations that are going to come
+                            scope for them will be whatever the value of scope after '{' will be so we set right here.
+                            */
                             curClassScope = getNextBlockID();
                          } 
     '{'CBLOCK'}'         { ; } 
 
-CBLOCK : CBLOCK DECL {;}
-       | CBLOCK FUNC {;}
-       |             {;}
+CBLOCK : CBLOCK DECL {}
+       | CBLOCK FUNC {}
+       |             {}
        ;
-
+/*Functions inside the class part*/
 FUNC : DATATYPE ID             { 
                                    symtab = add( symtab, $2, getCurBlockID() );
                                    symtab->type = $1; 
                                    symtab->classPtr = curClass;
                                } 
-       '('')''{'STATEMENTS '}' {  }
+       '('ARGORNULL')'           {
+                                
+                               } 
+       '{'STATEMENTS '}'       {
+           
+                               }
      ;
 
+ARGORNULL : ARGLIST             { }
+          |                     { }
+          ;
+ARGLIST : ARGLIST ',' ARG             {
+                                        
+                                         
+                                      }
+        | ARG                         { }
+        ;
+                                     
+ARG : DATATYPE ID                     {
+                                         /*Since '{' isnt encountered it is still not in the scope of fucntion so byte
+                                         calling next we get that scope id*/
+                                         Node* itr = findDecl( symtab, $2, getNextBlockID() );
+                                         if( itr != NULL )yyerror( "Re-declaration" );
+                                         else
+                                         {
+                                             symtab = add( symtab, $2, getNextBlockID() );
+                                             symtab->type = $1;
+                                             //Well they are clearly not a member of a class.
+                                             symtab->classPtr = NULL;
+                                         }
+                                      }
+     ;
+                                      
 STATEMENTS : E ';' STATEMENTS     {}
            | DECL  STATEMENTS     {  }
            | error STATEMENTS     {  }
            |                      {  }
            ;
+/************************************/
 
-
+/*Declaration Is Taken care combined for types and ids*/
 DECL : DATATYPE IDLIST';' {} 
      ;
-
 IDLIST : IDLIST ','ID     { 
-                            Node* itr = findDecl( symtab, $3 );
+                            Node* itr = findDecl( symtab, $3, getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
                             else
                             {
                                 symtab = add( symtab, $3, getCurBlockID() );
                                 symtab->type = $<symp>0;
-                                
+                                /*if current scope is class scope then
+                                its member of that class so set up class pointer 
+                                unless its just a normal decl inside*/
                                 if( curClassScope == getCurBlockID() )
                                 {
                                     symtab->classPtr = curClass;
@@ -69,7 +105,7 @@ IDLIST : IDLIST ','ID     {
                             }
                           }
        | ID               {  
-                            Node* itr = findDecl( symtab, $1 );
+                            Node* itr = findDecl( symtab, $1, getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
                             else
                             {
@@ -86,8 +122,8 @@ IDLIST : IDLIST ','ID     {
                             }     
                           }
        ;
-
-       
+/****************************************/
+/*Part which handles when id is refered*/      
 E: IDI '=' E                         {
                                         if( $1 == $3 )
                                         {
@@ -106,6 +142,7 @@ E: IDI '=' E                         {
                                        $$ =  $1;
                                         
                                     }
+ ;
                                     
 IDI : IDI '.' ID                    {
                                         //Determine if it is accesable or not
@@ -138,10 +175,8 @@ IDI : IDI '.' ID                    {
                                             $$ = itr->type;
                                         }
                                     }
-
-
- ;
-
+    ;
+/********************************************/
 %%
 //ID gets pointer to symtab so E gets its type
 
@@ -174,12 +209,12 @@ Node* find( const Node* const ll, char* s )
 }
 
 //use it when declaring , it just searches in current scope
-Node* findDecl( const Node* const ll, char* s )
+Node* findDecl( const Node* const ll, char* s, int blockID )
 {
     Node* itr = ll;
     for( itr = ll; itr != NULL; itr = itr->next )
     {
-        if( strcmp( s, itr->name ) == 0 && ( itr->blockID == 0 || ( getCurBlockID() == itr->blockID ) ) )
+        if( strcmp( s, itr->name ) == 0 && ( itr->blockID == 0 || ( blockID == itr->blockID ) ) )
         {
             return itr;
         }

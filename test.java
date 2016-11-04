@@ -3,8 +3,8 @@ class A
 {   
     A x;
     int a,b,c;
-    void fx()
-    {
+    void fx( double f11 )
+    { 
        int d;
     }
 }
@@ -12,10 +12,9 @@ class A
 class B
 {
     A b;
-    void fx()
+    void fx( int f1, float f2, A f3 )
     {
-        A bin;
-        bin.x.c = b.c;
+        
     } 
 }
 

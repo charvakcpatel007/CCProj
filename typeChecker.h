@@ -19,7 +19,7 @@ extern char* yytext;
 Node* add( Node* ll, char* s, int b_id );
 
 Node* find( const Node* const ll, char* s );
-Node* findDecl( const Node* const ll, char* s );
+Node* findDecl( const Node* const ll, char* s, int blockID );
 
 void printLL( const Node* const ll );
 
