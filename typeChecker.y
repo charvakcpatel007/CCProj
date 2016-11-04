@@ -15,6 +15,7 @@
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
+%token <val> AS
 %type <symp> E
 %type <symp> IDI
 %type <argp> FCALLARGS
@@ -34,15 +35,16 @@ CLS : CLASS ID           {
                          } 
     '{'CBLOCK'}'         { ; } 
 
-CBLOCK : CBLOCK DECL {}
-       | CBLOCK FUNC {}
-       |             {}
+CBLOCK : CBLOCK AS DECL       {  }
+       | CBLOCK FUNC          {  }
+       |                      {  }
        ;
 /*Functions inside the class part*/
-FUNC : DATATYPE ID             { 
-                                   symtab = add( symtab, $2, getCurBlockID() );
-                                   symtab->type = $1; 
+FUNC : AS DATATYPE ID          { 
+                                   symtab = add( symtab, $3, getCurBlockID() );
+                                   symtab->type = $2; 
                                    symtab->classPtr = curClass;
+                                   symtab->as = lastAS;//assign lastAS
                                    curFunction = symtab;
                                } 
        '('ARGORNULL')'         {
@@ -105,10 +107,12 @@ IDLIST : IDLIST ','ID     {
                                 if( curClassScope == getCurBlockID() )
                                 {
                                     symtab->classPtr = curClass;
+                                    symtab->as = lastAS;//assign lastAS
                                 }
                                 else
                                 {
                                     symtab->classPtr = NULL;
+                                    symtab->as = 0;//they are private
                                 }
                             }
                           }
@@ -122,10 +126,12 @@ IDLIST : IDLIST ','ID     {
                                 if( curClassScope == getCurBlockID() )
                                 {
                                     symtab->classPtr = curClass;
+                                    symtab->as = lastAS;//assign lastAS
                                 }
                                 else
                                 {
                                     symtab->classPtr = NULL;
+                                    symtab->as = 0;//they are private
                                 }
                             }     
                           }
@@ -155,7 +161,7 @@ IDI : IDI '.' ID FCALLARGS          {
                                         int found = 0;
                                         for( itr = symtab; itr != NULL; itr = itr->next )
                                         {
-                                            if( strcmp( itr->name, $3 ) == 0 && itr->classPtr == $1 )
+                                            if( strcmp( itr->name, $3 ) == 0 && itr->classPtr == $1 && itr->as == 1/*i.e it should be public*/ )
                                             {
                                                 found = 1;
                                                 break;
@@ -214,6 +220,7 @@ CALLARGLIST : CALLARGLIST ',' IDI   {
 //ID name  directly points to the s provided so it should not be on stack or freed later on.
 Node* add( Node* ll, char* s, int b_id )
 {
+   
     Node* newEntry = ( Node* )malloc( sizeof( Node ) );
     newEntry->name = s;
     newEntry->type = NULL;
@@ -221,6 +228,7 @@ Node* add( Node* ll, char* s, int b_id )
     newEntry->next = ll;
     newEntry->blockID = b_id;
     newEntry->args = NULL;
+    //printLL( newEntry );
     return newEntry;
 }
 
@@ -228,13 +236,14 @@ void printLL( const Node* const ll )
 {
     Node* itr = ll;
     printf( "<---Start--->\n" );
-    printf( "Name -- Block ID -- TYPE -- Member of Class -- ArgList Right-Left\n" );
+    printf( "Name -- Block ID -- TYPE -- Member of Class -- AS -- ArgList Right-Left\n" );
     for( itr = ll; itr != NULL; itr = itr->next )
     {
-        printf( "%s -- %d -- %s -- %s -- ", itr->name
+        printf( "%s -- %d -- %s -- %s -- %s -- ", itr->name
                                         , itr->blockID
                                         , ( itr->type == NULL ) ? "Type" : itr->type->name
                                         , ( itr->classPtr == NULL ) ? "Non-Member" : itr->classPtr->name
+                                        , ( itr->as == 0 ) ? "Private" : "Public"
             );
         printArgList( itr->args );
         printf( "\n" );
@@ -316,6 +325,7 @@ void  main()
     curFunction = NULL;
     voidTypePtr = NULL;
     nextID = 1;
+    lastAS = 0;
     curClassScope = 0;
     int i = 0;
     char a[][10] = { "int", "float", "double", "byte", "char", "String", "void" };

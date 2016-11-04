@@ -19,12 +19,14 @@ typedef struct node
     argListNode* args;// if not null then its a function with arg ll 
     struct node* next;
     int blockID;
+    int as;//0 for private , 1 for public
 } Node; 
 
 Node* symtab;
 Node* curClass;
 Node* curFunction;
 Node* voidTypePtr;
+int lastAS;
 int curClassScope;
 int line;
 int nextID;
