@@ -12,6 +12,7 @@
 "}"                                                         { pop(); return yytext[0];  }
 "\n"                                                        { line++; }
 " "|"\t"                                                    {;}
+"static "                                                   { return STATIC; }
 "public "                                                   { lastAS = yylval.val = 1; ;return AS;}//couldn't do in parser so here direct assignment
 "private "                                                  { lastAS = yylval.val = 0; ;return AS; }
 "class "             					    				{ return CLASS; }

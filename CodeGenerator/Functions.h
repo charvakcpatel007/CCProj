@@ -24,6 +24,7 @@ typedef struct node
     int as;//0 for private , 1 for public
 } Node; 
 
+
 Node* symtab;
 Node* curClass;
 Node* curFunction;

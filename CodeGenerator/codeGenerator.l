@@ -7,7 +7,7 @@
 %}
 %option noyywrap
 %%
-"."                                                          { return yytext[ 0 ]; }
+"."                                                         { return yytext[ 0 ]; }
 "{"                                                         { push(); return yytext[0]; } 
 "}"                                                         { pop(); return yytext[0];  }
 "\n"                                                        { line++; }

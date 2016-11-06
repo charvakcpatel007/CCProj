@@ -22,6 +22,7 @@ typedef struct node
     struct node* next;
     int blockID;
     int as;//0 for private , 1 for public
+    int isStatic;
 } Node; 
 
 Node* symtab;
@@ -29,6 +30,7 @@ Node* curClass;
 Node* curFunction;
 Node* voidTypePtr;
 int lastAS;
+int lastisStatic;
 int curClassScope;
 int line;
 int nextID;

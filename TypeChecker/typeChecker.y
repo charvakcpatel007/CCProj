@@ -15,11 +15,13 @@
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
+%token <val> STATIC
 %token <val> AS
 %type <symp> E
 %type <symp> IDI
 %type <argp> FCALLARGS
 %type <argp> CALLARGLIST
+%type <val> STATICORNULL
 %%
 
 P: CLS    {}
@@ -35,27 +37,28 @@ CLS : CLASS ID           {
                          } 
     '{'CBLOCK'}'         { ; } 
 
-CBLOCK : CBLOCK AS DECL       {  }
-       | CBLOCK FUNC          {  }
-       |                      {  }
+CBLOCK : CBLOCK AS STATICORNULL DECL       {  }
+       | CBLOCK FUNC                       {  }
+       |                                   {  }
        ;
 /*Functions inside the class part*/
-FUNC : AS DATATYPE ID          { 
-                                   symtab = add( symtab, $3, getCurBlockID() );
-                                   symtab->type = $2; 
-                                   symtab->classPtr = curClass;
-                                   symtab->as = lastAS;//assign lastAS
-                                   curFunction = symtab;
-                               } 
-       '('ARGORNULL')'         {
-                                   if( curFunction->args == NULL )
-                                   {
-                                       curFunction->args = addArg( curFunction->args, voidTypePtr );
-                                   }
-                               } 
-       '{'STATEMENTS '}'       {
+FUNC : AS STATICORNULL DATATYPE ID          { 
+                                                symtab = add( symtab, $4, getCurBlockID() );
+                                                symtab->type = $3; 
+                                                symtab->classPtr = curClass;
+                                                symtab->as = lastAS;//assign lastAS
+                                                symtab->isStatic = lastisStatic;
+                                                curFunction = symtab;
+                                            } 
+       '('ARGORNULL')'                      {
+                                                if( curFunction->args == NULL )
+                                                {
+                                                    curFunction->args = addArg( curFunction->args, voidTypePtr );
+                                                }
+                                            } 
+       '{'STATEMENTS '}'                    {
            
-                               }
+                                            }
      ;
 
 ARGORNULL : ARGLIST             { }
@@ -108,11 +111,13 @@ IDLIST : IDLIST ','ID     {
                                 {
                                     symtab->classPtr = curClass;
                                     symtab->as = lastAS;//assign lastAS
+                                    symtab->isStatic = lastisStatic;
                                 }
                                 else
                                 {
                                     symtab->classPtr = NULL;
                                     symtab->as = 0;//they are private
+                                    symtab->isStatic = lastisStatic;
                                 }
                             }
                           }
@@ -127,15 +132,20 @@ IDLIST : IDLIST ','ID     {
                                 {
                                     symtab->classPtr = curClass;
                                     symtab->as = lastAS;//assign lastAS
+                                    symtab->isStatic = lastisStatic;
                                 }
                                 else
                                 {
                                     symtab->classPtr = NULL;
                                     symtab->as = 0;//they are private
+                                    symtab->isStatic = lastisStatic;
                                 }
                             }     
                           }
        ;
+       
+STATICORNULL : STATIC           { $$ = 1; lastisStatic = 1; }
+              |                 { $$ = 0; lastisStatic = 0;}
 /****************************************/
 /*Part which handles when id is refered*/      
 E: IDI '=' E                        {
@@ -228,6 +238,7 @@ void  main()
     voidTypePtr = NULL;
     nextID = 1;
     lastAS = 0;
+    lastisStatic = 0;
     curClassScope = 0;
     int i = 0;
     char a[][10] = { "int", "float", "double", "byte", "char", "String", "void" };
