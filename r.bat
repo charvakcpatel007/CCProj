@@ -1,0 +1,1 @@
+typeChecker.exe < test.java
