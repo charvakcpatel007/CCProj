@@ -11,6 +11,7 @@ Node* add( Node* ll, char* s, int b_id )
     newEntry->next = ll;
     newEntry->blockID = b_id;
     newEntry->args = NULL;
+    newEntry->isStatic = 0;
     //printLL( newEntry );
     return newEntry;
 }
@@ -19,21 +20,31 @@ void printLL( const Node* const ll )
 {
     Node* itr = ll;
     printf( "<---Start--->\n" );
-    printf( "%-8s %-10s %-6s %-15s %-10s %-20s\n", "Name"
+    printf( "%-8s %-10s %-6s %-15s %-10s %-13s %-20s\n", "Name"
                                                     , "Block ID"
                                                     , "TYPE"
                                                     , "Member of Class"
                                                     , "AS"
+                                                    , "Instance"
                                                     , "ArgList Right-Left" );
     //printf( "Name -- Block ID -- TYPE -- Member of Class -- AS -- ArgList Right-Left\n" );
     for( itr = ll; itr != NULL; itr = itr->next )
     {
-        printf( "%-8s %-10d %-6s %-15s %-10s ", itr->name
-                                        , itr->blockID
-                                        , ( itr->type == NULL ) ? "Type" : itr->type->name
-                                        , ( itr->classPtr == NULL ) ? "Non-Member" : itr->classPtr->name
-                                        , ( itr->as == 0 ) ? "Private" : "Public"
-            );
+        printf( "%-8s ", itr->name );
+        printf( "%-10d ", itr->blockID );
+        printf( "%-6s ", ( itr->type == NULL ) ? "Type" : itr->type->name );
+        printf( "%-15s ", ( itr->classPtr == NULL ) ? "Local" : itr->classPtr->name );
+        if( itr->classPtr != NULL )
+        {
+            printf( "%-10s ", ( itr->as == 0 ) ? "Private" : "Public" );
+            printf( "%-13s ", ( itr->isStatic ) ?  "Static" : "Non-Static" );
+        }
+        else
+        {
+            printf( "%-10s ", "-" );
+            printf( "%-13s ", "-" );
+        }
+        
         printArgList( itr->args );
         printf( "\n" );
     }

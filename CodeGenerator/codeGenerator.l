@@ -7,15 +7,16 @@
 %}
 %option noyywrap
 %%
-"."                                                         { return yytext[ 0 ]; }
+"."                                                          { return yytext[ 0 ]; }
 "{"                                                         { push(); return yytext[0]; } 
 "}"                                                         { pop(); return yytext[0];  }
 "\n"                                                        { line++; }
 " "|"\t"                                                    {;}
+"static "                                                   { return STATIC; }
 "public "                                                   { lastAS = yylval.val = 1; ;return AS;}//couldn't do in parser so here direct assignment
 "private "                                                  { lastAS = yylval.val = 0; ;return AS; }
 "class "             					    				{ return CLASS; }
-([_a-zA-z][0-9]*)+                                          {
+([a-zA-z][0-9]*)+                                          {
                                                                 Node* temp = find( symtab, yytext );
 																yylval.name = (char*) malloc( strlen( yytext ) + 1 );
                                                                 strcpy( yylval.name, yytext );
