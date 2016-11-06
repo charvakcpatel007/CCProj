@@ -1,5 +1,8 @@
 #include "Functions.h"
 
+
+
+
 //ID name  directly points to the s provided so it should not be on stack or freed later on.
 Node* add( Node* ll, char* s, int b_id )
 {
@@ -185,3 +188,78 @@ int isInScope( int symBlock )
     }
     return 0;
 }
+
+/*code generator code*/
+CodeGenNode* initCodeGenNode( char* str )
+{
+    CodeGenNode* ret = ( CodeGenNode* )malloc( sizeof( CodeGenNode ) );
+    ret->str = (char*) malloc( strlen( str ) + 2 );
+    strcpy( ret->str, str );
+    ret->next = NULL;
+}
+
+void printCodeFragLL( const CodeFragLL l1 )
+{
+    CodeGenNode* itr;   
+    for( itr = l1.head; itr != NULL ; itr = itr->next )
+    {
+        printf( "%s", itr->str );
+    }
+}
+CodeFragLL addFrontCodeFragLL( CodeFragLL ll, char* str )
+{
+    CodeGenNode* newEntry = initCodeGenNode( str );
+    CodeFragLL ret = ll;
+    if( ret.head == NULL )
+    {
+        ret.head = ret.tail = newEntry;
+    }
+    else
+    {
+        newEntry->next = ret.head;
+        ret.head = newEntry;
+    }
+    return ret;
+}
+
+CodeFragLL addBackCodeFragLL( CodeFragLL ll, char* str )
+{
+    CodeGenNode* newEntry = initCodeGenNode( str );
+    CodeFragLL ret = ll;
+    if( ret.head == NULL )
+    {
+        ret.head = ret.tail = newEntry;
+    }
+    else
+    {
+        ret.tail->next = newEntry;
+        ret.tail = ret.tail->next;
+    }
+    return ret;
+}
+
+CodeFragLL mergeCodeFragLL( CodeFragLL l1, CodeFragLL l2 )
+{
+    CodeFragLL ret = { NULL, NULL };
+    
+    if( l1.head == NULL && l2.head == NULL )//if both null
+    {
+        ret.head = ret.tail = NULL;
+    }
+    else if( l1.head == NULL )
+    {
+        ret = l2;
+    }
+    else if( l2.head == NULL )
+    {
+        ret = l1;
+    }
+    else
+    {
+        ret.head = l1.head;
+        ret.tail = l2.tail;
+        l1.tail->next = l2.head;
+    }
+    return ret;
+}
+/***********************/

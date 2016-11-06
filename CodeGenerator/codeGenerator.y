@@ -1,7 +1,8 @@
 %{
-#include "Functions.h" 
+
 #include <stdio.h>
 #include <math.h>  
+#include "Functions.h" 
 
 %}
 %union
@@ -11,17 +12,20 @@
     struct node *symp;
     char* name;
     struct arglist* argp;
+    struct { char* str; struct codeGenNode* next; } codeFrag;
 }
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
 %token <val> STATIC
 %token <val> AS
-%type <symp> E
+
 %type <symp> IDI
 %type <argp> FCALLARGS
 %type <argp> CALLARGLIST
 %type <val> STATICORNULL
+%type <codeFrag> E
+%type <codeFrag> STATEMENTS
 %%
 
 P: CLS    {}
@@ -57,7 +61,7 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                 }
                                             } 
        '{'STATEMENTS '}'                    {
-           
+                                                
                                             }
      ;
 
@@ -144,83 +148,41 @@ IDLIST : IDLIST ','ID     {
                           }
        ;
        
-STATICORNULL : STATIC           { $$ = 1; lastisStatic = 1; }
-              |                 { $$ = 0; lastisStatic = 0;}
+STATICORNULL : STATIC           {  }
+              |                 {  }
 /****************************************/
 /*Part which handles when id is refered*/      
 E: IDI '=' E                        {
-                                        if( $1 == $3 )
-                                        {
-                                            $$ = $3;
-                                        }
-                                        else
-                                        {
-                                            printf( "%s != %s ", $1->name, $3->name );
-                                            yyerror( "Not compatable types" );
-                                            $$ = $3;
-                                        }    
+                                            
                                     }
  | IDI                              {
-                                       $$ =  $1;  
+                                        
                                     }
  ;
                                     
 IDI : IDI '.' ID FCALLARGS          {
-                                        //Determine if it is accesable or not
-                                        Node* itr;
-                                        int found = 0;
-                                        for( itr = symtab; itr != NULL; itr = itr->next )
-                                        {
-                                            if( strcmp( itr->name, $3 ) == 0 && itr->classPtr == $1 && itr->as == 1/*i.e it should be public*/ )
-                                            {
-                                                found = 1;
-                                                break;
-                                            }
-                                        }
-                                        if( found == 1 )
-                                        {
-                                            $$ = itr->type;
-                                            //Get the linked list of called types
-                                            if( isSameArgs( $4, itr->args ) == 0 )
-                                            {
-                                                yyerror( "Arguments Doesnt match" );
-                                            }
-                                            
-                                        }
-                                        else
-                                        {
-                                            yyerror( "Not a member or in-compatatble types" );
-                                            $$ = $1;
-                                        }
+                                        
+                                        
                                         
                                     }
-    | ID FCALLARGS                   {
-                                        Node* itr = find( symtab, $1 );
-                                        if( itr == NULL )yyerror( "Not in scope " );
-                                        else
-                                        {
-                                            $$ = itr->type;
-                                            if( isSameArgs( $2, itr->args ) == 0 )
-                                            {
-                                                yyerror( "Arguments Doesnt match" );
-                                            }
-                                        }
+    | ID FCALLARGS                  {
+                                        
                                     }
     ;
 FCALLARGS : '('CALLARGLIST')'       {
-                                        $$ = $2;
+                                        
                                     }
           | '('')'                  {
-                                        $$ = addArg( NULL, voidTypePtr );
+                                        
                                     }
           |                         {
-                                        $$ = NULL;
+                                        
                                     }
 CALLARGLIST : CALLARGLIST ',' IDI   {
-                                        $$ = addArg( $1, $3 );
+                                        
                                     }
             | IDI                   {
-                                        $$ = addArg( NULL, $1 );
+                                        
                                     }
 /********************************************/
 %%
@@ -248,6 +210,7 @@ void  main()
         
     }
     voidTypePtr = symtab;
+    
     yyparse();
     printLL( symtab );
 }

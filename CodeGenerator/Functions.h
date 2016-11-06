@@ -1,7 +1,10 @@
 #ifndef FUNC_H
 #define FUNC_H
+
 #include <stdio.h>
 #include <math.h> 
+
+
 typedef struct arglist
 {
     struct node* ptr;//Points to type of arg in sym table
@@ -54,5 +57,33 @@ void push();
 void pop();
 int getCurBlockID();
 int genNextBlockID();
+
+/************/
+/*Structs to support code generation*/
+
+typedef struct codeGenNode
+{
+    char* str;
+    struct codeGenNode* next;
+} CodeGenNode;
+
+//string is passed by ref here but after than new copy is created so if old one is on heap, it should be freed
+CodeGenNode* initCodeGenNode( char* str );
+//its a pair of two pointers nothing fancy here
+typedef struct codeFragLL
+{
+    struct codeGenNode* head;
+    struct codeGenNode* tail;
+} CodeFragLL;
+
+void printCodeFragLL( const CodeFragLL l1 );
+
+CodeFragLL addBackCodeFragLL( CodeFragLL ll, char* str );
+
+CodeFragLL addFrontCodeFragLL( CodeFragLL ll, char* str );
+
+CodeFragLL mergeCodeFragLL( CodeFragLL l1, CodeFragLL l2 );
+
+/************/
 
 #endif
