@@ -1,5 +1,5 @@
 %{
-#include "typeChecker.h" 
+#include "Functions.h" 
 #include <stdio.h>
 #include <math.h>  
 

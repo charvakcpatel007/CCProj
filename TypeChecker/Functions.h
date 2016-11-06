@@ -1,5 +1,7 @@
 #ifndef FUNC_H
 #define FUNC_H
+#include <stdio.h>
+#include <math.h> 
 typedef struct arglist
 {
     struct node* ptr;//Points to type of arg in sym table

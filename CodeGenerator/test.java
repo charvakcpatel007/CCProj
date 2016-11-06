@@ -14,7 +14,7 @@ class B
     public B b;
     public int a;
     public float x;
-    private void fy(  )
+    public void fy(  )
     {
         
     }

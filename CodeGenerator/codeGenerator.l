@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include"y.tab.h"
 
-#include "typeChecker.h"
+#include "Functions.h"
 
 %}
 %option noyywrap

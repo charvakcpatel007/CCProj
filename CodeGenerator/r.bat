@@ -1,0 +1,1 @@
+codeGenerator.exe < test.java
