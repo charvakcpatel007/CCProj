@@ -196,7 +196,13 @@ IDI : IDI '.' ID FCALLARGS          {
                                     }
     | ID FCALLARGS                   {
                                         Node* itr = find( symtab, $1 );
+                                        
                                         if( itr == NULL )yyerror( "Not in scope " );
+                                        else if( curFunction->isStatic == 1 && itr->isStatic == 0 )
+                                        {
+                                            $$ = itr->type;
+                                            yyerror( "Static methods can't refer to non-static variable" );
+                                        }
                                         else
                                         {
                                             $$ = itr->type;
@@ -204,6 +210,36 @@ IDI : IDI '.' ID FCALLARGS          {
                                             {
                                                 yyerror( "Arguments Doesnt match" );
                                             }
+                                        }
+                                    }
+    | DATATYPE '.' ID FCALLARGS     {
+                                        //Determine if it is accesable or not
+                                        Node* itr;
+                                        int found = 0;
+                                        
+                                        for( itr = symtab; itr != NULL; itr = itr->next )
+                                        {
+                                            if( strcmp( itr->name, $3 ) == 0 && itr->classPtr == $1 && itr->as == 1/*i.e it should be public*/ )
+                                            {
+                                                found = 1;
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if( found == 1 )
+                                        {
+                                            $$ = itr->type;
+                                            //Get the linked list of called types
+                                            if( isSameArgs( $4, itr->args ) == 0 )
+                                            {
+                                                yyerror( "Arguments Doesnt match" );
+                                            }
+                                            
+                                        }
+                                        else
+                                        {
+                                            yyerror( "Not a member or inaccesable or in-compatatble types" );
+                                            $$ = $1;
                                         }
                                     }
     ;

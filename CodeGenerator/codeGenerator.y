@@ -91,6 +91,11 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                 CodeFragLL temp = { NULL, NULL };
                                                 temp = addBackCodeFragLL( temp, $3->name );
                                                 temp = addBackCodeFragLL( temp, " " );
+                                                if( curFunction->isStatic == 1 )// static
+                                                {
+                                                    temp = addBackCodeFragLL( temp, curClass->name );
+                                                    temp = addBackCodeFragLL( temp, "_" );
+                                                }
                                                 temp = addBackCodeFragLL( temp, $4 );
                                                 temp = addBackCodeFragLL( temp, "( " );
                                                 if( curFunction->isStatic == 0 )//not static
@@ -98,6 +103,7 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                     $7 = addFrontCodeFragLL( $7, "* thisObj, " );
                                                     $7 = addFrontCodeFragLL( $7, curClass->name );
                                                 }
+                                                
                                                 temp = mergeCodeFragLL( temp, $7 );
                                                 temp = addBackCodeFragLL( temp, " )\n{\n" );
                                                 temp = mergeCodeFragLL( temp, $11 );
@@ -200,6 +206,15 @@ IDI : IDI '.' ID FCALLARGS          {
                                         
                                         free( $1 );
                                         $$ = $2;
+                                    }
+    | DATATYPE '.' ID FCALLARGS     {
+                                        CodeFragLL temp = { NULL, NULL };
+                                        temp = addBackCodeFragLL( temp, $1->name );
+                                        temp = addBackCodeFragLL( temp, "_" );
+                                        temp = addBackCodeFragLL( temp, $3 );
+                                        temp = mergeCodeFragLL( temp, $4 );
+                                        $$ = temp;
+                                        free( $3 );
                                     }
     ;
 FCALLARGS : '('CALLARGLIST')'       {
