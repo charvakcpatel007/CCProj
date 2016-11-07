@@ -5,7 +5,7 @@ class A
     public int a,b,c;
     public A fx( int f1, float f2, A f3 )
     { 
-      
+        
     }
 }
 

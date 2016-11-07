@@ -12,20 +12,32 @@
     struct node *symp;
     char* name;
     struct arglist* argp;
-    struct { char* str; struct codeGenNode* next; } codeFrag;
+    #ifndef cfl
+    #define cfl
+    //its a pair of two pointers nothing fancy here
+    struct codeFragLL
+    {
+        struct codeGenNode* head;
+        struct codeGenNode* tail;
+    };
+    #endif
+    struct codeFragLL codeFrag;
 }
+%type <codeFrag> E
+%type <codeFrag> STATEMENTS
+%type <codeFrag> IDI
+%type <codeFrag> FUNC
+%type <codeFrag> ARGORNULL
 %token <name> ID
 %token <symp> CLASS
 %token <symp> DATATYPE
 %token <val> STATIC
 %token <val> AS
 
-%type <symp> IDI
-%type <argp> FCALLARGS
-%type <argp> CALLARGLIST
+%type <codeFrag> FCALLARGS
+%type <codeFrag> CALLARGLIST
 %type <val> STATICORNULL
-%type <codeFrag> E
-%type <codeFrag> STATEMENTS
+
 %%
 
 P: CLS    {}
@@ -53,15 +65,18 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                 symtab->as = lastAS;//assign lastAS
                                                 symtab->isStatic = lastisStatic;
                                                 curFunction = symtab;
+                                                
                                             } 
-       '('ARGORNULL')'                      {
+       '(' ARGORNULL ')'                    {
                                                 if( curFunction->args == NULL )
                                                 {
                                                     curFunction->args = addArg( curFunction->args, voidTypePtr );
                                                 }
-                                            } 
-       '{'STATEMENTS '}'                    {
                                                 
+                                            } 
+       '{' STATEMENTS '}'                   {
+                                                
+                                                printCodeFragLL( $11 );
                                             }
      ;
 
@@ -91,12 +106,68 @@ ARG : DATATYPE ID                     {
                                       }
      ;
                                       
-STATEMENTS : E ';' STATEMENTS     {  }
+STATEMENTS : E ';' STATEMENTS     { 
+                                      $1 = addBackCodeFragLL( $1, ";\n" );
+                                      $$ = mergeCodeFragLL( $1, $3 );
+                                       
+                                  }
            | DECL  STATEMENTS     {  }
            | error STATEMENTS     {  }
-           |                      {  }
+           |                      { 
+                                    struct codeFragLL temp = { NULL, NULL };
+                                    $$ =  temp;
+                                  }
            ;
 /************************************/
+
+/****************************************/
+/*Part which handles when id is refered*/      
+E: IDI '=' E                        {
+                                        
+                                        $1 = addBackCodeFragLL( $1, "=" ); 
+                                       
+                                        $$ = mergeCodeFragLL( $1, $3 );
+                                    }
+ | IDI                              {
+                                        $$ = $1;
+                                    }
+ ;
+                                    
+IDI : IDI '.' ID FCALLARGS          {
+                                        $1 = addBackCodeFragLL( $1, "." );
+                                        $1 = addBackCodeFragLL( $1, $3 );
+                                        free( $3 );
+                                        $$ = mergeCodeFragLL( $1, $4 );
+                                        
+                                    }
+    | ID FCALLARGS                  {
+                                        $2 = addFrontCodeFragLL( $2, $1 );
+                                        free( $1 );
+                                        $$ = $2;
+                                    }
+    ;
+FCALLARGS : '('CALLARGLIST')'       {
+                                        $2 = addFrontCodeFragLL( $2, "(" );
+                                        $2 = addBackCodeFragLL( $2, ")" );
+                                        $$ = $2;
+                                    }
+          | '('')'                  {
+                                        CodeFragLL temp = { NULL, NULL };
+                                        temp = addBackCodeFragLL( temp, "()" );
+                                        $$ = temp;
+                                    }
+          |                         {
+                                        CodeFragLL temp = { NULL, NULL };
+                                        $$ = temp;
+                                    }
+CALLARGLIST : CALLARGLIST ',' IDI   {
+                                        $1 = addBackCodeFragLL( $1, ", " );
+                                        $$ = mergeCodeFragLL( $1, $3 );
+                                    }
+            | IDI                   {
+                                        $$ = $1;
+                                    }
+/********************************************/
 
 /*Declaration Is Taken care combined for types and ids*/
 DECL : DATATYPE IDLIST';' {} 
@@ -150,43 +221,8 @@ IDLIST : IDLIST ','ID     {
        
 STATICORNULL : STATIC           {  }
               |                 {  }
-/****************************************/
-/*Part which handles when id is refered*/      
-E: IDI '=' E                        {
-                                            
-                                    }
- | IDI                              {
-                                        
-                                    }
- ;
-                                    
-IDI : IDI '.' ID FCALLARGS          {
-                                        
-                                        
-                                        
-                                    }
-    | ID FCALLARGS                  {
-                                        
-                                    }
-    ;
-FCALLARGS : '('CALLARGLIST')'       {
-                                        
-                                    }
-          | '('')'                  {
-                                        
-                                    }
-          |                         {
-                                        
-                                    }
-CALLARGLIST : CALLARGLIST ',' IDI   {
-                                        
-                                    }
-            | IDI                   {
-                                        
-                                    }
-/********************************************/
+
 %%
-//ID gets pointer to symtab so E gets its type
 
 
 

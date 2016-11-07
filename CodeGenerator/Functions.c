@@ -1,8 +1,6 @@
 #include "Functions.h"
 
 
-
-
 //ID name  directly points to the s provided so it should not be on stack or freed later on.
 Node* add( Node* ll, char* s, int b_id )
 {
@@ -196,9 +194,10 @@ CodeGenNode* initCodeGenNode( char* str )
     ret->str = (char*) malloc( strlen( str ) + 2 );
     strcpy( ret->str, str );
     ret->next = NULL;
+    return ret;
 }
 
-void printCodeFragLL( const CodeFragLL l1 )
+void printCodeFragLL( const struct codeFragLL l1 )
 {
     CodeGenNode* itr;   
     for( itr = l1.head; itr != NULL ; itr = itr->next )
@@ -206,13 +205,14 @@ void printCodeFragLL( const CodeFragLL l1 )
         printf( "%s", itr->str );
     }
 }
-CodeFragLL addFrontCodeFragLL( CodeFragLL ll, char* str )
+struct codeFragLL addFrontCodeFragLL( struct codeFragLL ll, char* str )
 {
     CodeGenNode* newEntry = initCodeGenNode( str );
-    CodeFragLL ret = ll;
+    struct codeFragLL ret = ll;
     if( ret.head == NULL )
     {
-        ret.head = ret.tail = newEntry;
+        ret.head = newEntry;
+        ret.tail = ret.head;
     }
     else
     {
@@ -222,25 +222,31 @@ CodeFragLL addFrontCodeFragLL( CodeFragLL ll, char* str )
     return ret;
 }
 
-CodeFragLL addBackCodeFragLL( CodeFragLL ll, char* str )
+struct codeFragLL addBackCodeFragLL( struct codeFragLL ll, char* str )
 {
     CodeGenNode* newEntry = initCodeGenNode( str );
-    CodeFragLL ret = ll;
+    // printf( "h" );
+    struct codeFragLL ret = ll;
+    // printCodeFragLL( ll );
     if( ret.head == NULL )
     {
-        ret.head = ret.tail = newEntry;
+        ret.head = newEntry;
+        ret.tail = ret.head;
+        // printf( "g1\n" );
     }
     else
     {
+        // printf( "%u\n", ret.tail );
         ret.tail->next = newEntry;
         ret.tail = ret.tail->next;
+        
     }
     return ret;
 }
 
-CodeFragLL mergeCodeFragLL( CodeFragLL l1, CodeFragLL l2 )
+struct codeFragLL mergeCodeFragLL( struct codeFragLL l1, struct codeFragLL l2 )
 {
-    CodeFragLL ret = { NULL, NULL };
+    struct codeFragLL ret = { NULL, NULL };
     
     if( l1.head == NULL && l2.head == NULL )//if both null
     {

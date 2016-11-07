@@ -29,6 +29,9 @@ typedef struct node
 } Node; 
 
 Node* symtab;
+
+
+
 Node* curClass;
 Node* curFunction;
 Node* voidTypePtr;
@@ -69,20 +72,25 @@ typedef struct codeGenNode
 
 //string is passed by ref here but after than new copy is created so if old one is on heap, it should be freed
 CodeGenNode* initCodeGenNode( char* str );
+#ifndef cfl
+#define cfl
 //its a pair of two pointers nothing fancy here
-typedef struct codeFragLL
+struct codeFragLL
 {
-    struct codeGenNode* head;
-    struct codeGenNode* tail;
-} CodeFragLL;
+        struct codeGenNode* head;
+        struct codeGenNode* tail;
+};
+#endif
 
-void printCodeFragLL( const CodeFragLL l1 );
+typedef struct codeFragLL CodeFragLL;
 
-CodeFragLL addBackCodeFragLL( CodeFragLL ll, char* str );
+void printCodeFragLL( const struct codeFragLL l1 );
 
-CodeFragLL addFrontCodeFragLL( CodeFragLL ll, char* str );
+struct codeFragLL addBackCodeFragLL( struct codeFragLL ll, char* str );
 
-CodeFragLL mergeCodeFragLL( CodeFragLL l1, CodeFragLL l2 );
+struct codeFragLL addFrontCodeFragLL( struct codeFragLL ll, char* str );
+
+struct codeFragLL mergeCodeFragLL( struct codeFragLL l1, struct codeFragLL l2 );
 
 /************/
 
