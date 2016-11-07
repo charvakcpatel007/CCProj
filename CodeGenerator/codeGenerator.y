@@ -37,6 +37,10 @@
 %type <codeFrag> FCALLARGS
 %type <codeFrag> CALLARGLIST
 %type <val> STATICORNULL
+%type <codeFrag> CBLOCK
+%type <codeFrag> ARGLIST 
+%type <codeFrag> ARG
+
 
 %%
 
@@ -51,19 +55,28 @@ CLS : CLASS ID           {
                             */
                             curClassScope = getNextBlockID();
                          } 
-    '{'CBLOCK'}'         { ; } 
+    '{'CBLOCK'}'         {  } 
+    ;
 
-CBLOCK : CBLOCK AS STATICORNULL DECL       {  }
-       | CBLOCK FUNC                       {  }
-       |                                   {  }
+CBLOCK : CBLOCK AS STATICORNULL DECL       { 
+                                                
+                                           }
+       | CBLOCK FUNC                       { 
+       
+                                           }
+       |                                   {
+           
+                                           }
        ;
 /*Functions inside the class part*/
 FUNC : AS STATICORNULL DATATYPE ID          { 
+                                                
                                                 symtab = add( symtab, $4, getCurBlockID() );
                                                 symtab->type = $3; 
                                                 symtab->classPtr = curClass;
                                                 symtab->as = lastAS;//assign lastAS
                                                 symtab->isStatic = lastisStatic;
+                                                symtab->args = NULL;
                                                 curFunction = symtab;
                                                 
                                             } 
@@ -75,25 +88,50 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                 
                                             } 
        '{' STATEMENTS '}'                   {
+                                                CodeFragLL temp = { NULL, NULL };
+                                                temp = addBackCodeFragLL( temp, $3->name );
+                                                temp = addBackCodeFragLL( temp, " " );
+                                                temp = addBackCodeFragLL( temp, $4 );
+                                                temp = addBackCodeFragLL( temp, "( " );
+                                                if( curFunction->isStatic == 0 )//not static
+                                                {
+                                                    $7 = addFrontCodeFragLL( $7, "* thisObj, " );
+                                                    $7 = addFrontCodeFragLL( $7, curClass->name );
+                                                }
+                                                temp = mergeCodeFragLL( temp, $7 );
+                                                temp = addBackCodeFragLL( temp, " )\n{\n" );
+                                                temp = mergeCodeFragLL( temp, $11 );
+                                                temp = addBackCodeFragLL( temp, "\n}\n" );
                                                 
-                                                printCodeFragLL( $11 );
+                                                $$ = temp;
+                                                
+                                                printCodeFragLL( temp );
                                             }
      ;
 
-ARGORNULL : ARGLIST             { }
-          |                     {  }
+ARGORNULL : ARGLIST             { 
+                                    $$ = $1;
+                                }
+          |                     { 
+                                    CodeFragLL temp = { NULL, NULL };
+                                    $$ = temp;
+                                }
           ;
 ARGLIST : ARGLIST ',' ARG             {
-                                        
-                                         
+                                          $1 = addBackCodeFragLL( $1, ", " );
+                                          $$ = mergeCodeFragLL( $1, $3 );
                                       }
-        | ARG                         { }
+        | ARG                         { $$ = $1; }
         ;
                                      
 ARG : DATATYPE ID                     {
+    
                                          /*Since '{' isnt encountered it is still not in the scope of fucntion so byte
                                          calling next we get that scope id*/
                                          Node* itr = findDecl( symtab, $2, getNextBlockID() );
+                                         CodeFragLL temp = { NULL, NULL };
+                                        
+                                         
                                          if( itr != NULL )yyerror( "Re-declaration" );
                                          else
                                          {
@@ -103,6 +141,12 @@ ARG : DATATYPE ID                     {
                                              symtab->classPtr = NULL;
                                              curFunction->args = addArg( curFunction->args, $1 );   
                                          }
+                                         /*Code Generation Part*/
+                                         temp = addBackCodeFragLL( temp, $1->name );
+                                         temp = addBackCodeFragLL( temp, " " );
+                                         temp = addBackCodeFragLL( temp, $2 );
+                                         
+                                         $$ = temp;
                                       }
      ;
                                       
@@ -114,8 +158,8 @@ STATEMENTS : E ';' STATEMENTS     {
            | DECL  STATEMENTS     {  }
            | error STATEMENTS     {  }
            |                      { 
-                                    struct codeFragLL temp = { NULL, NULL };
-                                    $$ =  temp;
+                                    CodeFragLL temp = { NULL, NULL };
+                                    $$ = temp;
                                   }
            ;
 /************************************/
@@ -125,7 +169,6 @@ STATEMENTS : E ';' STATEMENTS     {
 E: IDI '=' E                        {
                                         
                                         $1 = addBackCodeFragLL( $1, "=" ); 
-                                       
                                         $$ = mergeCodeFragLL( $1, $3 );
                                     }
  | IDI                              {
@@ -134,14 +177,27 @@ E: IDI '=' E                        {
  ;
                                     
 IDI : IDI '.' ID FCALLARGS          {
-                                        $1 = addBackCodeFragLL( $1, "." );
+                                        $1 = addBackCodeFragLL( $1, "->" );
                                         $1 = addBackCodeFragLL( $1, $3 );
                                         free( $3 );
                                         $$ = mergeCodeFragLL( $1, $4 );
                                         
                                     }
     | ID FCALLARGS                  {
+                                        Node* itr = find( symtab, $1 );
                                         $2 = addFrontCodeFragLL( $2, $1 );
+                                        if( itr->classPtr == NULL )
+                                        {
+                                            
+                                        }
+                                        else
+                                        {
+                                            //add this->
+                                            if( curFunction->isStatic == 0 )
+                                                $2 = addFrontCodeFragLL( $2, "thisObj->" );
+                                            
+                                        }
+                                        
                                         free( $1 );
                                         $$ = $2;
                                     }
@@ -160,6 +216,7 @@ FCALLARGS : '('CALLARGLIST')'       {
                                         CodeFragLL temp = { NULL, NULL };
                                         $$ = temp;
                                     }
+          ;
 CALLARGLIST : CALLARGLIST ',' IDI   {
                                         $1 = addBackCodeFragLL( $1, ", " );
                                         $$ = mergeCodeFragLL( $1, $3 );
@@ -167,6 +224,7 @@ CALLARGLIST : CALLARGLIST ',' IDI   {
             | IDI                   {
                                         $$ = $1;
                                     }
+            ;
 /********************************************/
 
 /*Declaration Is Taken care combined for types and ids*/
@@ -219,8 +277,9 @@ IDLIST : IDLIST ','ID     {
                           }
        ;
        
-STATICORNULL : STATIC           {  }
-              |                 {  }
+STATICORNULL : STATIC           { $$ = 1; lastisStatic = 1; }
+              |                 { $$ = 0; lastisStatic = 0; }
+              ;
 
 %%
 

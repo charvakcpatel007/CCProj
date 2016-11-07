@@ -453,12 +453,12 @@ static const yytype_int8 yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    43,    43,    44,    46,    46,    56,    57,    58,    61,
-      70,    61,    83,    84,    86,    90,    93,   109,   114,   115,
-     116,   125,   131,   136,   143,   149,   154,   159,   163,   167,
-     173,   175,   199,   222,   223
+       0,    47,    47,    48,    50,    50,    61,    64,    67,    72,
+      83,    72,   112,   115,   120,   124,   127,   153,   158,   159,
+     160,   169,   174,   179,   186,   205,   210,   215,   220,   224,
+     231,   233,   257,   280,   281
 };
 #endif
 
@@ -1389,21 +1389,21 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 43 "codeGenerator.y"
+#line 47 "codeGenerator.y"
     {}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 44 "codeGenerator.y"
+#line 48 "codeGenerator.y"
     {;}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 46 "codeGenerator.y"
+#line 50 "codeGenerator.y"
     { 
                             curClass = symtab = add( symtab, (yyvsp[(2) - (2)].name), getCurBlockID() );
                             /*
@@ -1417,41 +1417,49 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 54 "codeGenerator.y"
-    { ; }
+#line 58 "codeGenerator.y"
+    {  }
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 56 "codeGenerator.y"
-    {  }
+#line 61 "codeGenerator.y"
+    { 
+                                                
+                                           }
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 57 "codeGenerator.y"
-    {  }
+#line 64 "codeGenerator.y"
+    { 
+       
+                                           }
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 58 "codeGenerator.y"
-    {  }
+#line 67 "codeGenerator.y"
+    {
+           
+                                           }
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 61 "codeGenerator.y"
+#line 72 "codeGenerator.y"
     { 
+                                                
                                                 symtab = add( symtab, (yyvsp[(4) - (4)].name), getCurBlockID() );
                                                 symtab->type = (yyvsp[(3) - (4)].symp); 
                                                 symtab->classPtr = curClass;
                                                 symtab->as = lastAS;//assign lastAS
                                                 symtab->isStatic = lastisStatic;
+                                                symtab->args = NULL;
                                                 curFunction = symtab;
                                                 
                                             }
@@ -1460,7 +1468,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 70 "codeGenerator.y"
+#line 83 "codeGenerator.y"
     {
                                                 if( curFunction->args == NULL )
                                                 {
@@ -1473,52 +1481,77 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 77 "codeGenerator.y"
+#line 90 "codeGenerator.y"
     {
+                                                CodeFragLL temp = { NULL, NULL };
+                                                temp = addBackCodeFragLL( temp, (yyvsp[(3) - (12)].symp)->name );
+                                                temp = addBackCodeFragLL( temp, " " );
+                                                temp = addBackCodeFragLL( temp, (yyvsp[(4) - (12)].name) );
+                                                temp = addBackCodeFragLL( temp, "( " );
+                                                if( curFunction->isStatic == 0 )//not static
+                                                {
+                                                    (yyvsp[(7) - (12)].codeFrag) = addFrontCodeFragLL( (yyvsp[(7) - (12)].codeFrag), "* thisObj, " );
+                                                    (yyvsp[(7) - (12)].codeFrag) = addFrontCodeFragLL( (yyvsp[(7) - (12)].codeFrag), curClass->name );
+                                                }
+                                                temp = mergeCodeFragLL( temp, (yyvsp[(7) - (12)].codeFrag) );
+                                                temp = addBackCodeFragLL( temp, " )\n{\n" );
+                                                temp = mergeCodeFragLL( temp, (yyvsp[(11) - (12)].codeFrag) );
+                                                temp = addBackCodeFragLL( temp, "\n}\n" );
                                                 
-                                                printCodeFragLL( (yyvsp[(11) - (12)].codeFrag) );
+                                                (yyval.codeFrag) = temp;
+                                                
+                                                printCodeFragLL( temp );
                                             }
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 83 "codeGenerator.y"
-    { }
+#line 112 "codeGenerator.y"
+    { 
+                                    (yyval.codeFrag) = (yyvsp[(1) - (1)].codeFrag);
+                                }
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 84 "codeGenerator.y"
-    {  }
+#line 115 "codeGenerator.y"
+    { 
+                                    CodeFragLL temp = { NULL, NULL };
+                                    (yyval.codeFrag) = temp;
+                                }
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 86 "codeGenerator.y"
+#line 120 "codeGenerator.y"
     {
-                                        
-                                         
+                                          (yyvsp[(1) - (3)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (3)].codeFrag), ", " );
+                                          (yyval.codeFrag) = mergeCodeFragLL( (yyvsp[(1) - (3)].codeFrag), (yyvsp[(3) - (3)].codeFrag) );
                                       }
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 90 "codeGenerator.y"
-    { }
+#line 124 "codeGenerator.y"
+    { (yyval.codeFrag) = (yyvsp[(1) - (1)].codeFrag); }
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 93 "codeGenerator.y"
+#line 127 "codeGenerator.y"
     {
+    
                                          /*Since '{' isnt encountered it is still not in the scope of fucntion so byte
                                          calling next we get that scope id*/
                                          Node* itr = findDecl( symtab, (yyvsp[(2) - (2)].name), getNextBlockID() );
+                                         CodeFragLL temp = { NULL, NULL };
+                                        
+                                         
                                          if( itr != NULL )yyerror( "Re-declaration" );
                                          else
                                          {
@@ -1528,13 +1561,19 @@ yyreduce:
                                              symtab->classPtr = NULL;
                                              curFunction->args = addArg( curFunction->args, (yyvsp[(1) - (2)].symp) );   
                                          }
+                                         /*Code Generation Part*/
+                                         temp = addBackCodeFragLL( temp, (yyvsp[(1) - (2)].symp)->name );
+                                         temp = addBackCodeFragLL( temp, " " );
+                                         temp = addBackCodeFragLL( temp, (yyvsp[(2) - (2)].name) );
+                                         
+                                         (yyval.codeFrag) = temp;
                                       }
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 109 "codeGenerator.y"
+#line 153 "codeGenerator.y"
     { 
                                       (yyvsp[(1) - (3)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (3)].codeFrag), ";\n" );
                                       (yyval.codeFrag) = mergeCodeFragLL( (yyvsp[(1) - (3)].codeFrag), (yyvsp[(3) - (3)].codeFrag) );
@@ -1545,35 +1584,34 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 114 "codeGenerator.y"
+#line 158 "codeGenerator.y"
     {  }
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 115 "codeGenerator.y"
+#line 159 "codeGenerator.y"
     {  }
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 116 "codeGenerator.y"
+#line 160 "codeGenerator.y"
     { 
-                                    struct codeFragLL temp = { NULL, NULL };
-                                    (yyval.codeFrag) =  temp;
+                                    CodeFragLL temp = { NULL, NULL };
+                                        (yyval.codeFrag) = temp;
                                   }
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 125 "codeGenerator.y"
+#line 169 "codeGenerator.y"
     {
                                         
                                         (yyvsp[(1) - (3)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (3)].codeFrag), "=" ); 
-                                       
                                         (yyval.codeFrag) = mergeCodeFragLL( (yyvsp[(1) - (3)].codeFrag), (yyvsp[(3) - (3)].codeFrag) );
                                     }
     break;
@@ -1581,7 +1619,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 131 "codeGenerator.y"
+#line 174 "codeGenerator.y"
     {
                                         (yyval.codeFrag) = (yyvsp[(1) - (1)].codeFrag);
                                     }
@@ -1590,9 +1628,9 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 136 "codeGenerator.y"
+#line 179 "codeGenerator.y"
     {
-                                        (yyvsp[(1) - (4)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (4)].codeFrag), "." );
+                                        (yyvsp[(1) - (4)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (4)].codeFrag), "->" );
                                         (yyvsp[(1) - (4)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (4)].codeFrag), (yyvsp[(3) - (4)].name) );
                                         free( (yyvsp[(3) - (4)].name) );
                                         (yyval.codeFrag) = mergeCodeFragLL( (yyvsp[(1) - (4)].codeFrag), (yyvsp[(4) - (4)].codeFrag) );
@@ -1603,9 +1641,22 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 143 "codeGenerator.y"
+#line 186 "codeGenerator.y"
     {
+                                        Node* itr = find( symtab, (yyvsp[(1) - (2)].name) );
                                         (yyvsp[(2) - (2)].codeFrag) = addFrontCodeFragLL( (yyvsp[(2) - (2)].codeFrag), (yyvsp[(1) - (2)].name) );
+                                        if( itr->classPtr == NULL )
+                                        {
+                                            
+                                        }
+                                        else
+                                        {
+                                            //add this->
+                                            if( curFunction->isStatic == 0 )
+                                                (yyvsp[(2) - (2)].codeFrag) = addFrontCodeFragLL( (yyvsp[(2) - (2)].codeFrag), "thisObj->" );
+                                            
+                                        }
+                                        
                                         free( (yyvsp[(1) - (2)].name) );
                                         (yyval.codeFrag) = (yyvsp[(2) - (2)].codeFrag);
                                     }
@@ -1614,7 +1665,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 149 "codeGenerator.y"
+#line 205 "codeGenerator.y"
     {
                                         (yyvsp[(2) - (3)].codeFrag) = addFrontCodeFragLL( (yyvsp[(2) - (3)].codeFrag), "(" );
                                         (yyvsp[(2) - (3)].codeFrag) = addBackCodeFragLL( (yyvsp[(2) - (3)].codeFrag), ")" );
@@ -1625,7 +1676,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 154 "codeGenerator.y"
+#line 210 "codeGenerator.y"
     {
                                         CodeFragLL temp = { NULL, NULL };
                                         temp = addBackCodeFragLL( temp, "()" );
@@ -1636,7 +1687,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 159 "codeGenerator.y"
+#line 215 "codeGenerator.y"
     {
                                         CodeFragLL temp = { NULL, NULL };
                                         (yyval.codeFrag) = temp;
@@ -1646,7 +1697,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 163 "codeGenerator.y"
+#line 220 "codeGenerator.y"
     {
                                         (yyvsp[(1) - (3)].codeFrag) = addBackCodeFragLL( (yyvsp[(1) - (3)].codeFrag), ", " );
                                         (yyval.codeFrag) = mergeCodeFragLL( (yyvsp[(1) - (3)].codeFrag), (yyvsp[(3) - (3)].codeFrag) );
@@ -1656,7 +1707,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 167 "codeGenerator.y"
+#line 224 "codeGenerator.y"
     {
                                         (yyval.codeFrag) = (yyvsp[(1) - (1)].codeFrag);
                                     }
@@ -1665,14 +1716,14 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 173 "codeGenerator.y"
+#line 231 "codeGenerator.y"
     {}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 175 "codeGenerator.y"
+#line 233 "codeGenerator.y"
     { 
                             Node* itr = findDecl( symtab, (yyvsp[(3) - (3)].name), getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
@@ -1702,7 +1753,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 199 "codeGenerator.y"
+#line 257 "codeGenerator.y"
     {  
                             Node* itr = findDecl( symtab, (yyvsp[(1) - (1)].name), getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
@@ -1729,21 +1780,21 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 222 "codeGenerator.y"
-    {  }
+#line 280 "codeGenerator.y"
+    { (yyval.val) = 1; lastisStatic = 1; }
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 223 "codeGenerator.y"
-    {  }
+#line 281 "codeGenerator.y"
+    { (yyval.val) = 0; lastisStatic = 0; }
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1747 "y.tab.c"
+#line 1798 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1955,7 +2006,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 225 "codeGenerator.y"
+#line 284 "codeGenerator.y"
 
 
 
