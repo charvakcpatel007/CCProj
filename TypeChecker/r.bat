@@ -1,1 +1,1 @@
-typeChecker.exe < test.java
+typeChecker.exe < test.java > output.txt

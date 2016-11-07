@@ -12,13 +12,13 @@ class A
 class B
 {
     public B b;
-    public int a, b, c;
+    public int a, c;
     public float x;
     public void fy(  )
     {
         
     }
-    public void fx( int x )
+    public static void fx( int x )
     {
         a = x;
     } 

@@ -19,14 +19,14 @@ Node* add( Node* ll, char* s, int b_id )
 void printLL( const Node* const ll )
 {
     Node* itr = ll;
-    printf( "<---Start--->\n" );
-    printf( "%-8s %-10s %-6s %-15s %-10s %-13s %-20s\n", "Name"
+    /*printf( "%-8s %-10s %-6s %-15s %-10s %-13s %-20s\n", "Name"
                                                     , "Block ID"
                                                     , "TYPE"
                                                     , "Member of Class"
                                                     , "AS"
                                                     , "Instance"
                                                     , "ArgList Right-Left" );
+    */
     //printf( "Name -- Block ID -- TYPE -- Member of Class -- AS -- ArgList Right-Left\n" );
     for( itr = ll; itr != NULL; itr = itr->next )
     {
@@ -48,7 +48,6 @@ void printLL( const Node* const ll )
         printArgList( itr->args );
         printf( "\n" );
     }
-    printf( "<----End---->\n\n" );
 }
 
 void printArgList( const argListNode* const ll )
