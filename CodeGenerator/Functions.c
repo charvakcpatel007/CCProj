@@ -205,6 +205,41 @@ void printCodeFragLL( const struct codeFragLL l1 )
         printf( "%s", itr->str );
     }
 }
+
+CodeGenNode* addTextAfterNode( CodeGenNode* itr, char* str )
+{
+    CodeGenNode* newEntry = initCodeGenNode( str );
+    newEntry->next = itr->next;
+    itr->next = newEntry;
+    return newEntry;
+}
+
+
+
+void declPartialToFinalCodeFrag(struct codeFragLL l1, int isStatic, char* className )
+{
+    
+    CodeGenNode* itr = l1.head;  
+    itr = addTextAfterNode( itr, " " );
+    if( isStatic == 1 )
+    {
+        itr = addTextAfterNode( itr, className );
+        itr = addTextAfterNode( itr, "_" );
+    }
+    itr = itr->next;
+    for( ; itr != NULL && itr->next != NULL ; itr = itr->next )
+    {
+        itr = addTextAfterNode( itr, ", " );
+        if( isStatic == 1 )
+        {
+            itr = addTextAfterNode( itr, className );
+            itr = addTextAfterNode( itr, "_" );
+        }
+    }
+   
+    
+}
+
 struct codeFragLL addFrontCodeFragLL( struct codeFragLL ll, char* str )
 {
     CodeGenNode* newEntry = initCodeGenNode( str );

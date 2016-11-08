@@ -40,6 +40,8 @@
 %type <codeFrag> CBLOCK
 %type <codeFrag> ARGLIST 
 %type <codeFrag> ARG
+%type <codeFrag> IDLIST
+%type <codeFrag> DECL
 
 
 %%
@@ -55,17 +57,40 @@ CLS : CLASS ID           {
                             */
                             curClassScope = getNextBlockID();
                          } 
-    '{'CBLOCK'}'         {  } 
+    '{'CBLOCK'}'         {
+                            CodeFragLL temp = { NULL, NULL };
+                            temp = addBackCodeFragLL( temp, "struct ");
+                            temp = addBackCodeFragLL( temp, $2 );
+                            temp = addBackCodeFragLL( temp, "\n{\n\t" );
+                            temp = mergeCodeFragLL( temp, $5 );
+                            temp = addBackCodeFragLL( temp, "\r}\n" );
+                            printCodeFragLL( temp );
+                         } 
     ;
 
 CBLOCK : CBLOCK AS STATICORNULL DECL       { 
-                                                
+                                               declPartialToFinalCodeFrag( $4, $3, curClass->name );
+                                               
+                                               if( $3 == 1 )//static
+                                               {
+                                                   $4 = addBackCodeFragLL( $4, ";\n" );
+                                                   globalVariables = mergeCodeFragLL( globalVariables, $4 );//static so send to global pool
+                                                   $$ = $1;
+                                               }
+                                               else
+                                               {
+                                                   $4 = addBackCodeFragLL( $4, ";\n\t" );
+                                                   $$ = mergeCodeFragLL( $$, $4 );
+                                               }
+                                               
                                            }
        | CBLOCK FUNC                       { 
-       
+                                                $$ = $1;
+                                                functions = mergeCodeFragLL( functions, $2 );//send them to global pool
                                            }
        |                                   {
-           
+                                                CodeFragLL temp = { NULL, NULL };
+                                                $$ = temp;
                                            }
        ;
 /*Functions inside the class part*/
@@ -91,27 +116,34 @@ FUNC : AS STATICORNULL DATATYPE ID          {
                                                 CodeFragLL temp = { NULL, NULL };
                                                 temp = addBackCodeFragLL( temp, $3->name );
                                                 temp = addBackCodeFragLL( temp, " " );
-                                                if( curFunction->isStatic == 1 )// static
-                                                {
-                                                    temp = addBackCodeFragLL( temp, curClass->name );
-                                                    temp = addBackCodeFragLL( temp, "_" );
-                                                }
+                                                
+                                                temp = addBackCodeFragLL( temp, curClass->name );
+                                                temp = addBackCodeFragLL( temp, "_" );
+                                                
                                                 temp = addBackCodeFragLL( temp, $4 );
                                                 temp = addBackCodeFragLL( temp, "( " );
                                                 if( curFunction->isStatic == 0 )//not static
                                                 {
-                                                    $7 = addFrontCodeFragLL( $7, "* thisObj, " );
+                                                    if( $7.head == NULL )
+                                                    {
+                                                        $7 = addFrontCodeFragLL( $7, "* thisObj" );
+                                                    }
+                                                    else
+                                                    {
+                                                        $7 = addFrontCodeFragLL( $7, "* thisObj, " );
+                                                    }
+                                                    
                                                     $7 = addFrontCodeFragLL( $7, curClass->name );
                                                 }
                                                 
                                                 temp = mergeCodeFragLL( temp, $7 );
-                                                temp = addBackCodeFragLL( temp, " )\n{\n" );
+                                                temp = addBackCodeFragLL( temp, " )\n{\n\t" );
                                                 temp = mergeCodeFragLL( temp, $11 );
                                                 temp = addBackCodeFragLL( temp, "\n}\n" );
                                                 
                                                 $$ = temp;
                                                 
-                                                printCodeFragLL( temp );
+                                                
                                             }
      ;
 
@@ -157,15 +189,25 @@ ARG : DATATYPE ID                     {
      ;
                                       
 STATEMENTS : E ';' STATEMENTS     { 
-                                      $1 = addBackCodeFragLL( $1, ";\n" );
+                                      $1 = addBackCodeFragLL( $1, ";\n\t" );
                                       $$ = mergeCodeFragLL( $1, $3 );
                                        
                                   }
-           | DECL  STATEMENTS     {  }
+           | DECL  STATEMENTS     { 
+                                    declPartialToFinalCodeFrag( $1, 0/*its non-member so static*/, curClass->name );
+                                    $1 = addBackCodeFragLL( $1, ";\n\t" );
+                                    
+                                    $$ = mergeCodeFragLL( $1, $2 ); 
+                                    
+                                    
+                                  }
            | error STATEMENTS     {  }
            |                      { 
                                     CodeFragLL temp = { NULL, NULL };
                                     $$ = temp;
+                                  }
+           | ';' STATEMENTS       {
+                                      $$ = addBackCodeFragLL( $2, ";" );;
                                   }
            ;
 /************************************/
@@ -198,9 +240,17 @@ IDI : IDI '.' ID FCALLARGS          {
                                         }
                                         else
                                         {
-                                            //add this->
-                                            if( curFunction->isStatic == 0 )
+                                            if( itr->isStatic == 1 )//variable is static
+                                            {
+                                                $2 = addFrontCodeFragLL( $2, "_" );
+                                                $2 = addFrontCodeFragLL( $2, itr->classPtr->name );
+                                            }
+                                            else
+                                            {
                                                 $2 = addFrontCodeFragLL( $2, "thisObj->" );
+                                            }
+                                            
+                                                
                                             
                                         }
                                         
@@ -242,10 +292,15 @@ CALLARGLIST : CALLARGLIST ',' IDI   {
             ;
 /********************************************/
 
-/*Declaration Is Taken care combined for types and ids*/
-DECL : DATATYPE IDLIST';' {} 
+/*its sends first node as type name and then each node is ID name*/
+DECL : DATATYPE IDLIST';' {
+                              $2 = addFrontCodeFragLL( $2, $1->name );
+                              
+                              $$ = $2;
+                          } 
      ;
 IDLIST : IDLIST ','ID     { 
+                            
                             Node* itr = findDecl( symtab, $3, getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
                             else
@@ -268,8 +323,11 @@ IDLIST : IDLIST ','ID     {
                                     symtab->isStatic = lastisStatic;
                                 }
                             }
+                            $1 = addBackCodeFragLL( $1, $3 );
+                            $$ = $1;
                           }
        | ID               {  
+                            CodeFragLL temp = { NULL, NULL };
                             Node* itr = findDecl( symtab, $1, getCurBlockID() );
                             if( itr != NULL )yyerror( "Re-declaration" );
                             else
@@ -288,7 +346,9 @@ IDLIST : IDLIST ','ID     {
                                     symtab->as = 0;//they are private
                                     symtab->isStatic = lastisStatic;
                                 }
-                            }     
+                            }  
+                            temp = addBackCodeFragLL( temp, $1 );
+                            $$ = temp;
                           }
        ;
        
@@ -308,6 +368,10 @@ void  main()
     curClass = NULL;
     curFunction = NULL;
     voidTypePtr = NULL;
+    functions.head = NULL;
+    functions.tail = NULL;
+    globalVariables.head = NULL;
+    globalVariables.tail = NULL;
     nextID = 1;
     lastAS = 0;
     lastisStatic = 0;
@@ -322,7 +386,10 @@ void  main()
     voidTypePtr = symtab;
     
     yyparse();
-    printLL( symtab );
+    //printLL( symtab );
+    printCodeFragLL( globalVariables );
+    printCodeFragLL( functions );
+    
 }
 
  

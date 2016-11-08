@@ -84,7 +84,12 @@ struct codeFragLL
 
 typedef struct codeFragLL CodeFragLL;
 
+struct codeFragLL functions;
+struct codeFragLL globalVariables;
+
 void printCodeFragLL( const struct codeFragLL l1 );
+void declPartialToFinalCodeFrag( struct codeFragLL l1, int isStatic, char* className );
+CodeGenNode* addTextAfterNode( CodeGenNode* itr, char* str );
 
 struct codeFragLL addBackCodeFragLL( struct codeFragLL ll, char* str );
 

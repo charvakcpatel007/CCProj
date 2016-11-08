@@ -90,6 +90,7 @@ ARG : DATATYPE ID                     {
 STATEMENTS : E ';' STATEMENTS     {  }
            | DECL  STATEMENTS     {  }
            | error STATEMENTS     {  }
+           | ';' STATEMENTS       {  }
            |                      {  }
            ;
 /************************************/
